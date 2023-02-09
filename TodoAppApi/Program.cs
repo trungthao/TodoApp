@@ -3,6 +3,8 @@ using NLog;
 using TodoApp.Contracts;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.Options;
 
 // var logger = NLog.LogManager.Setup().LoadConfigurationFromFile(string.Concat(Directory.GetCurrentDirectory(), "/nlog.config")); 
 
@@ -17,6 +19,7 @@ builder.Services.AddControllers(config =>
     {
         config.RespectBrowserAcceptHeader = true;
         config.ReturnHttpNotAcceptable = true;
+        config.InputFormatters.Insert(0, GetJsonPatchInputFormatter());
     })
     .AddXmlDataContractSerializerFormatters()
     .AddCustomCSVFormatter()
@@ -57,4 +60,21 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter()
+{
+    var builder = new ServiceCollection()
+        .AddLogging()
+        .AddMvc()
+        .AddNewtonsoftJson()
+        .Services.BuildServiceProvider();
+
+    return builder
+        .GetRequiredService<IOptions<MvcOptions>>()
+        .Value
+        .InputFormatters
+        .OfType<NewtonsoftJsonPatchInputFormatter>()
+        .First();
+}
 

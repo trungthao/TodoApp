@@ -13,9 +13,11 @@ namespace TodoApp.Api
             CreateMap<ListTask, ListTaskDto>();
             CreateMap<TaskItem, TaskItemDto>();
             CreateMap<ListTaskForCreationDto, ListTask>();
+            CreateMap<ListTaskForUpdateDto, ListTask>();
 
             CreateMap<TaskItem, TaskItemDto>();
             CreateMap<TaskItemForCreationDto, TaskItem>();
+            CreateMap<TaskItemForUpdateDto, TaskItem>().ReverseMap();
         }
     }
 }
