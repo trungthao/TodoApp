@@ -12,6 +12,8 @@ namespace TodoApp.Contracts
         ListTask? GetListTask(Guid listTaskId, bool trackChanges);
 
         void CreateListTask(ListTask listTask);
+
+        void DeleteListTask(ListTask listTask);
     }
 }
 

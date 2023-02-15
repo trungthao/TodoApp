@@ -16,6 +16,11 @@ namespace TodoApp.Repository
             Create(listTask);
         }
 
+        public void DeleteListTask(ListTask listTask)
+        {
+            Delete(listTask);
+        }
+
         public IEnumerable<ListTask> GetAllListTask(bool trackChanges)
         {
             return FindAll(trackChanges)

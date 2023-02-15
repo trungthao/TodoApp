@@ -13,5 +13,9 @@ namespace TodoApp.Service.Contracts
         IEnumerable<ListTaskDto> GetListTaskByIds(IEnumerable<Guid> ids);
 
         (IEnumerable<ListTaskDto> listTasks, string ids) CreateListTaskCollection(IEnumerable<ListTaskForCreationDto> listTaskCollection);
+
+        void DeleteListTask(Guid listTaskId, bool trackChanges);
+
+        void UpdateListTask(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto, bool trackChanges);
     }
 }

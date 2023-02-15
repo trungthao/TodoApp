@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
+using TodoApp.Presentation.ModelBinders;
 using TodoApp.Service.Contracts;
 using TodoApp.Shared.DataTransferObjects;
 
@@ -32,7 +33,7 @@ namespace TodoApp.Presentation.Controllers
         }
 
         [HttpGet("collection/({ids})", Name = "ListTaskCollection")]
-        public IActionResult GetListTaskCollection(IEnumerable<Guid> ids)
+        public IActionResult GetListTaskCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
         {
             var listTask = _service.ListTaskService.GetListTaskByIds(ids);
             return Ok(listTask);
@@ -51,8 +52,31 @@ namespace TodoApp.Presentation.Controllers
             if (listTaskForCreationDto is null)
                 return BadRequest("listTaskForCreationDto is null");
 
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
             var createdListTaskDto = _service.ListTaskService.CreateListTask(listTaskForCreationDto);
             return CreatedAtRoute("ListTaskId", new { id = createdListTaskDto.Id }, createdListTaskDto);
+        }
+
+        [HttpDelete("listTaskId:guid")]
+        public IActionResult DeleteListTask(Guid listTaskId)
+        {
+            _service.ListTaskService.DeleteListTask(listTaskId, trackChanges: false);
+            return NoContent();
+        }
+
+        [HttpPut("{listTaskId:guid}")]
+        public IActionResult UpdateListTask(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto)
+        {
+            if (listTaskForUpdateDto is null)
+                return BadRequest("listTaskForUpdateDto is null");
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            _service.ListTaskService.UpdateListTask(listTaskId, listTaskForUpdateDto, trackChanges: true);
+            return NoContent();
         }
     }
 }

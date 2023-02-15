@@ -17,6 +17,11 @@ namespace TodoApp.Repository
             Create(taskItem);
         }
 
+        public void DeleteTaskItem(TaskItem taskItem)
+        {
+            Delete(taskItem);
+        }
+
         public TaskItem? GetTaskItemForListTask(Guid listTaskId, Guid id, bool trackChanges)
         {
             return FindByCondition(t => t.ListTaskId.Equals(listTaskId) && t.Id.Equals(id), trackChanges)

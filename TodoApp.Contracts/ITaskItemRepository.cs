@@ -10,6 +10,8 @@ namespace TodoApp.Contracts
         TaskItem? GetTaskItemForListTask(Guid listTaskId, Guid id, bool trackChanges);
 
         void CreateTaskItem(Guid listTaskId, TaskItem taskItem);
+
+        void DeleteTaskItem(TaskItem taskItem);
     }
 }
 

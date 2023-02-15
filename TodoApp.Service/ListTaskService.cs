@@ -48,6 +48,16 @@ public class ListTaskService : IListTaskService
         return (listTaskCollectionToReturn, ids);
     }
 
+    public void DeleteListTask(Guid listTaskId, bool trackChanges)
+    {
+        var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges);
+        if (listTask == null)
+            throw new ListTaskNotFoundException(listTaskId);
+
+        _repositoryManager.ListTask.DeleteListTask(listTask);
+        _repositoryManager.Save();
+    }
+
     public IEnumerable<ListTaskDto> GetAllListTask(bool trackChanges)
     {
         var listTask = _repositoryManager.ListTask.GetAllListTask(trackChanges);
@@ -78,6 +88,16 @@ public class ListTaskService : IListTaskService
         var listTaskToReturn = _mapper.Map<IEnumerable<ListTaskDto>>(listTaskEntities);
 
         return listTaskToReturn;
+    }
+
+    public void UpdateListTask(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto, bool trackChanges)
+    {
+        var listTaskEntity = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges: trackChanges);
+        if (listTaskEntity is null)
+            throw new ListTaskNotFoundException(listTaskId);
+
+        _mapper.Map(listTaskForUpdateDto, listTaskEntity);
+        _repositoryManager.Save();
     }
 }
 
