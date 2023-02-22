@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Security;
+using System.Net;
 using AutoMapper;
 using TodoApp.Contracts;
 using TodoApp.Entities.Exceptions;
@@ -20,17 +21,17 @@ public class ListTaskService : IListTaskService
         _mapper = mapper;
     }
 
-    public ListTaskDto CreateListTask(ListTaskForCreationDto listTaskForCreationDto)
+    public async Task<ListTaskDto> CreateListTaskAsync(ListTaskForCreationDto listTaskForCreationDto)
     {
         var listTaskEntity = _mapper.Map<ListTask>(listTaskForCreationDto);
         _repositoryManager.ListTask.CreateListTask(listTaskEntity);
-        _repositoryManager.Save();
+        await _repositoryManager.SaveAsync();
 
         var listTaskToReturn = _mapper.Map<ListTaskDto>(listTaskEntity);
         return listTaskToReturn;
     }
 
-    public (IEnumerable<ListTaskDto> listTasks, string ids) CreateListTaskCollection(IEnumerable<ListTaskForCreationDto> listTaskCollection)
+    public async Task<(IEnumerable<ListTaskDto> listTasks, string ids)> CreateListTaskCollectionAsync(IEnumerable<ListTaskForCreationDto> listTaskCollection)
     {
         if (listTaskCollection is null)
             throw new ListTaskCollectionBadRequest();
@@ -40,7 +41,7 @@ public class ListTaskService : IListTaskService
         {
             _repositoryManager.ListTask.CreateListTask(listTaskEntity);
         }
-        _repositoryManager.Save();
+        await _repositoryManager.SaveAsync();
 
         var listTaskCollectionToReturn = _mapper.Map<IEnumerable<ListTaskDto>>(listTaskEntities);
         var ids = string.Join(",", listTaskCollectionToReturn.Select(x => x.Id));
@@ -48,40 +49,36 @@ public class ListTaskService : IListTaskService
         return (listTaskCollectionToReturn, ids);
     }
 
-    public void DeleteListTask(Guid listTaskId, bool trackChanges)
+    public async Task DeleteListTaskAsync(Guid listTaskId, bool trackChanges)
     {
-        var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges);
-        if (listTask == null)
-            throw new ListTaskNotFoundException(listTaskId);
+        var listTask = await GetListTaskAndCheckIfExists(listTaskId, trackChanges);
 
         _repositoryManager.ListTask.DeleteListTask(listTask);
-        _repositoryManager.Save();
+        await _repositoryManager.SaveAsync();
     }
 
-    public IEnumerable<ListTaskDto> GetAllListTask(bool trackChanges)
+    public async Task<IEnumerable<ListTaskDto>> GetAllListTaskAsync(bool trackChanges)
     {
-        var listTask = _repositoryManager.ListTask.GetAllListTask(trackChanges);
+        var listTask = await _repositoryManager.ListTask.GetAllListTaskAsync(trackChanges);
         var listTaskDto = _mapper.Map<IEnumerable<ListTaskDto>>(listTask);
         return listTaskDto;
     }
 
-    public ListTaskDto GetListTask(Guid listTaskId, bool trackChanges)
+    public async Task<ListTaskDto> GetListTaskAsync(Guid listTaskId, bool trackChanges)
     {
-        var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges);
-        if (listTask == null)
-            throw new ListTaskNotFoundException(listTaskId);
+        var listTask = await GetListTaskAndCheckIfExists(listTaskId, trackChanges);
 
         var listTaskDto = _mapper.Map<ListTaskDto>(listTask);
 
         return listTaskDto;
     }
 
-    public IEnumerable<ListTaskDto> GetListTaskByIds(IEnumerable<Guid> ids)
+    public async Task<IEnumerable<ListTaskDto>> GetListTaskByIdsAsync(IEnumerable<Guid> ids)
     {
         if (ids is null)
             throw new IdParametersBadRequestException();
 
-        var listTaskEntities = _repositoryManager.ListTask.GetListTaskByIds(ids, trackChanges: false);
+        var listTaskEntities = await _repositoryManager.ListTask.GetListTaskByIdsAsync(ids, trackChanges: false);
         if (ids.Count() != listTaskEntities.Count())
             throw new CollectionByIdsBadRequestException();
 
@@ -90,14 +87,21 @@ public class ListTaskService : IListTaskService
         return listTaskToReturn;
     }
 
-    public void UpdateListTask(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto, bool trackChanges)
+    public async Task UpdateListTaskAsync(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto, bool trackChanges)
     {
-        var listTaskEntity = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges: trackChanges);
-        if (listTaskEntity is null)
-            throw new ListTaskNotFoundException(listTaskId);
+        var listTaskEntity = await GetListTaskAndCheckIfExists(listTaskId, trackChanges);
 
         _mapper.Map(listTaskForUpdateDto, listTaskEntity);
-        _repositoryManager.Save();
+        await _repositoryManager.SaveAsync();
+    }
+
+    private async Task<ListTask> GetListTaskAndCheckIfExists(Guid id, bool trackChanges)
+    {
+        var listTaskEntity = await _repositoryManager.ListTask.GetListTaskAsync(id, trackChanges);
+        if (listTaskEntity is null)
+            throw new ListTaskNotFoundException(id);
+
+        return listTaskEntity;
     }
 }
 

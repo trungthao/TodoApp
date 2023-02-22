@@ -21,9 +21,9 @@ namespace TodoApp.Repository
 
         public ITaskItemRepository TaskItem => _taskItemRepository.Value;
 
-        public void Save()
+        public async Task SaveAsync()
         {
-            _repositoryContext.SaveChanges();
+            await _repositoryContext.SaveChangesAsync();
         }
     }
 }

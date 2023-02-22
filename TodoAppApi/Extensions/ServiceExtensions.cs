@@ -1,8 +1,7 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
 using TodoApp.Contracts;
 using TodoApp.LoggerService;
+using TodoApp.Presentation.ActionFilters;
 using TodoApp.Repository;
 using TodoApp.Service;
 using TodoApp.Service.Contracts;
@@ -16,9 +15,11 @@ namespace TodoApp.Api.Extensions
         services.AddCors(options =>
         {
             options.AddPolicy("CorsPolicy", builder =>
-            builder.AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod());
+                builder.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .WithExposedHeaders("X-Pagination")
+            );
         });
 
         public static void ConfigureLoggerService(this IServiceCollection services) =>
@@ -37,6 +38,9 @@ namespace TodoApp.Api.Extensions
 
         public static IMvcBuilder AddCustomCSVFormatter(this IMvcBuilder builder) =>
             builder.AddMvcOptions(config => config.OutputFormatters.Add(new CsvOutputFormatter()));
+
+        public static void ConfigureActionFilters(this IServiceCollection services) =>
+            services.AddScoped<ValidationFilterAttribute>();
     }
 }
 

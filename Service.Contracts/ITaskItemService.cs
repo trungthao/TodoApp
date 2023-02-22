@@ -1,27 +1,28 @@
 ﻿using System;
 using TodoApp.Entities.Models;
 using TodoApp.Shared.DataTransferObjects;
+using TodoApp.Shared.RequestParameters;
 
 namespace TodoApp.Service.Contracts
 {
     public interface ITaskItemService
     {
-        IEnumerable<TaskItemDto> GetTaskItems(Guid listTaskId, bool trackChanges);
+        Task<(IEnumerable<TaskItemDto> taskItems, MetaData metaData)> GetTaskItemsAsync(Guid listTaskId, TaskItemParameters taskItemParameters, bool trackChanges);
 
-        TaskItemDto CreateTaskItem(Guid listTaskId, TaskItemForCreationDto taskItem, bool trackChanges);
+        Task<TaskItemDto> CreateTaskItemAsync(Guid listTaskId, TaskItemForCreationDto taskItem, bool trackChanges);
 
-        TaskItemDto GetTaskItemForListTask(Guid listTaskId, Guid id, bool trackChanges);
+        Task<TaskItemDto> GetTaskItemForListTaskAsync(Guid listTaskId, Guid id, bool trackChanges);
 
-        void DeleteTaskItemForListTask(Guid listTaskId, Guid id, bool trackChanges);
+        Task DeleteTaskItemForListTaskAsync(Guid listTaskId, Guid id, bool trackChanges);
 
-        void UpdateTaskItemForListTask(Guid listTaskId, Guid id,
+        Task UpdateTaskItemForListTaskAsync(Guid listTaskId, Guid id,
             TaskItemForUpdateDto taskItemForUpdateDto,
             bool listTaskTrackChanges, bool taskItemTrackChanges
         );
 
-        (TaskItemForUpdateDto taskItemToPatch, TaskItem taskItemEntity) GetTaskItemForPatch(Guid listTaskId, Guid taskItemId, bool listTrackChanges, bool itemTrackChanges);
+        Task<(TaskItemForUpdateDto taskItemToPatch, TaskItem taskItemEntity)> GetTaskItemForPatchAsync(Guid listTaskId, Guid taskItemId, bool listTrackChanges, bool itemTrackChanges);
 
-        void SaveChangesForPatch(TaskItemForUpdateDto taskItemForUpdate, TaskItem taskItemEntity);
+        Task SaveChangesForPatchAsync(TaskItemForUpdateDto taskItemForUpdate, TaskItem taskItemEntity);
     }
 }
 

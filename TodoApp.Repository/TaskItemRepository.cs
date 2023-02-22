@@ -1,6 +1,9 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore;
 using TodoApp.Contracts;
 using TodoApp.Entities.Models;
+using TodoApp.Repository.Extensions;
+using TodoApp.Shared.RequestParameters;
 
 namespace TodoApp.Repository
 {
@@ -22,17 +25,25 @@ namespace TodoApp.Repository
             Delete(taskItem);
         }
 
-        public TaskItem? GetTaskItemForListTask(Guid listTaskId, Guid id, bool trackChanges)
+        public async Task<TaskItem?> GetTaskItemForListTaskAsync(Guid listTaskId, Guid id, bool trackChanges)
         {
-            return FindByCondition(t => t.ListTaskId.Equals(listTaskId) && t.Id.Equals(id), trackChanges)
-                .FirstOrDefault();
+            return await FindByCondition(t => t.ListTaskId.Equals(listTaskId) && t.Id.Equals(id), trackChanges)
+                .FirstOrDefaultAsync();
         }
 
-        public IEnumerable<TaskItem> GetTaskItems(Guid listTaskId, bool trackChanges)
+        public async Task<PagedList<TaskItem>> GetTaskItemsAsync(Guid listTaskId, TaskItemParameters taskItemParameters, bool trackChanges)
         {
-            return FindByCondition(t => t.ListTaskId.Equals(listTaskId), trackChanges)
+            var taskItems = await FindByCondition(t => t.ListTaskId.Equals(listTaskId), trackChanges)
+                .FilterTaskItems(taskItemParameters.FromDate, taskItemParameters.ToDate)
+                .Search(taskItemParameters.SearchTerm)
                 .OrderBy(t => t.DueDate)
-                .ToList();
+                .Skip((taskItemParameters.PageNumber - 1) * taskItemParameters.PageSize)
+                .Take(taskItemParameters.PageSize)
+                .ToListAsync();
+
+            var count = await FindByCondition(t => t.ListTaskId.Equals(listTaskId), trackChanges).CountAsync();
+
+            return new PagedList<TaskItem>(taskItems, count, taskItemParameters.PageNumber, taskItemParameters.PageSize);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
+using TodoApp.Presentation.ActionFilters;
 using TodoApp.Presentation.ModelBinders;
 using TodoApp.Service.Contracts;
 using TodoApp.Shared.DataTransferObjects;
@@ -18,64 +19,54 @@ namespace TodoApp.Presentation.Controllers
         }
 
         [HttpPost("collection")]
-        public IActionResult CreateListTaskCollection([FromBody] IEnumerable<ListTaskForCreationDto> listTaskCollection)
+        public async Task<IActionResult> CreateListTaskCollection([FromBody] IEnumerable<ListTaskForCreationDto> listTaskCollection)
         {
-            var result = _service.ListTaskService.CreateListTaskCollection(listTaskCollection);
+            var result = await _service.ListTaskService.CreateListTaskCollectionAsync(listTaskCollection);
 
             return CreatedAtRoute("ListTaskCollection", new { result.ids }, result.listTasks);
         }
 
         [HttpGet("")]
-        public IActionResult GetAllListTask()
+        public async Task<IActionResult> GetAllListTask()
         {
-            var listTask = _service.ListTaskService.GetAllListTask(trackChanges: false);
+            var listTask = await _service.ListTaskService.GetAllListTaskAsync(trackChanges: false);
             return Ok(listTask);
         }
 
         [HttpGet("collection/({ids})", Name = "ListTaskCollection")]
-        public IActionResult GetListTaskCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
+        public async Task<IActionResult> GetListTaskCollection([ModelBinder(BinderType = typeof(ArrayModelBinder))] IEnumerable<Guid> ids)
         {
-            var listTask = _service.ListTaskService.GetListTaskByIds(ids);
+            var listTask = await _service.ListTaskService.GetListTaskByIdsAsync(ids);
             return Ok(listTask);
         }
 
         [HttpGet("{id:guid}", Name = "ListTaskId")]
-        public IActionResult GetListTask(Guid id)
+        public async Task<IActionResult> GetListTask(Guid id)
         {
-            var result = _service.ListTaskService.GetListTask(id, trackChanges: false);
+            var result = await _service.ListTaskService.GetListTaskAsync(id, trackChanges: false);
             return Ok(result);
         }
 
         [HttpPost]
-        public IActionResult CreateListTask([FromBody] ListTaskForCreationDto listTaskForCreationDto)
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        public async Task<IActionResult> CreateListTask([FromBody] ListTaskForCreationDto listTaskForCreationDto)
         {
-            if (listTaskForCreationDto is null)
-                return BadRequest("listTaskForCreationDto is null");
-
-            if (!ModelState.IsValid)
-                return UnprocessableEntity(ModelState);
-
-            var createdListTaskDto = _service.ListTaskService.CreateListTask(listTaskForCreationDto);
+            var createdListTaskDto = await _service.ListTaskService.CreateListTaskAsync(listTaskForCreationDto);
             return CreatedAtRoute("ListTaskId", new { id = createdListTaskDto.Id }, createdListTaskDto);
         }
 
         [HttpDelete("listTaskId:guid")]
-        public IActionResult DeleteListTask(Guid listTaskId)
+        public async Task<IActionResult> DeleteListTask(Guid listTaskId)
         {
-            _service.ListTaskService.DeleteListTask(listTaskId, trackChanges: false);
+            await _service.ListTaskService.DeleteListTaskAsync(listTaskId, trackChanges: false);
             return NoContent();
         }
 
         [HttpPut("{listTaskId:guid}")]
-        public IActionResult UpdateListTask(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto)
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        public async Task<IActionResult> UpdateListTask(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto)
         {
-            if (listTaskForUpdateDto is null)
-                return BadRequest("listTaskForUpdateDto is null");
-
-            if (!ModelState.IsValid)
-                return UnprocessableEntity(ModelState);
-
-            _service.ListTaskService.UpdateListTask(listTaskId, listTaskForUpdateDto, trackChanges: true);
+            await _service.ListTaskService.UpdateListTaskAsync(listTaskId, listTaskForUpdateDto, trackChanges: true);
             return NoContent();
         }
     }

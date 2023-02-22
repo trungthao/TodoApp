@@ -5,11 +5,11 @@ namespace TodoApp.Contracts
 {
     public interface IListTaskRepository
     {
-        IEnumerable<ListTask> GetAllListTask(bool trackChanges);
+        Task<IEnumerable<ListTask>> GetAllListTaskAsync(bool trackChanges);
 
-        IEnumerable<ListTask> GetListTaskByIds(IEnumerable<Guid> ids, bool trackChanges);
+        Task<IEnumerable<ListTask>> GetListTaskByIdsAsync(IEnumerable<Guid> ids, bool trackChanges);
 
-        ListTask? GetListTask(Guid listTaskId, bool trackChanges);
+        Task<ListTask?> GetListTaskAsync(Guid listTaskId, bool trackChanges);
 
         void CreateListTask(ListTask listTask);
 

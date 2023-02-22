@@ -6,6 +6,7 @@ using TodoApp.Entities.Exceptions;
 using TodoApp.Service.Contracts;
 using TodoApp.Shared.DataTransferObjects;
 using TodoApp.Entities.Models;
+using TodoApp.Shared.RequestParameters;
 
 namespace TodoApp.Service
 {
@@ -22,95 +23,93 @@ namespace TodoApp.Service
             _mapper = mapper;
         }
 
-        public TaskItemDto CreateTaskItem(Guid listTaskId, TaskItemForCreationDto taskItemForCreationDto, bool trackChanges)
+        public async Task<TaskItemDto> CreateTaskItemAsync(Guid listTaskId, TaskItemForCreationDto taskItemForCreationDto, bool trackChanges)
         {
-            var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges);
-            if (listTask == null)
-                throw new ListTaskNotFoundException(listTaskId);
-
+            await CheckIfListTaskExistsAsync(listTaskId, trackChanges);
             var taskItemEntity = _mapper.Map<TaskItem>(taskItemForCreationDto);
             _repositoryManager.TaskItem.CreateTaskItem(listTaskId, taskItemEntity);
-            _repositoryManager.Save();
+            await _repositoryManager.SaveAsync();
 
             var taskItemToReturn = _mapper.Map<TaskItemDto>(taskItemEntity);
 
             return taskItemToReturn;
         }
 
-        public void DeleteTaskItemForListTask(Guid listTaskId, Guid id, bool trackChanges)
+        public async Task DeleteTaskItemForListTaskAsync(Guid listTaskId, Guid id, bool trackChanges)
         {
-            var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges);
-            if (listTask == null)
-                throw new ListTaskNotFoundException(listTaskId);
+            await CheckIfListTaskExistsAsync(listTaskId, trackChanges);
 
-            var taskItem = _repositoryManager.TaskItem.GetTaskItemForListTask(listTaskId, id, trackChanges);
-            if (taskItem == null)
-                throw new TaskItemNotFoundException(listTaskId, id);
+            var taskItem = await GetTaskItemAndCheckIfExistsAsync(listTaskId, id, trackChanges);
 
             _repositoryManager.TaskItem.DeleteTaskItem(taskItem);
-            _repositoryManager.Save();
+            await _repositoryManager.SaveAsync();
         }
 
-        public TaskItemDto GetTaskItemForListTask(Guid listTaskId, Guid id, bool trackChanges)
+        public async Task<TaskItemDto> GetTaskItemForListTaskAsync(Guid listTaskId, Guid id, bool trackChanges)
         {
-            var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges);
-            if (listTask is null)
-                throw new ListTaskNotFoundException(listTaskId);
+            await CheckIfListTaskExistsAsync(listTaskId, trackChanges);
 
-            var taskItem = _repositoryManager.TaskItem.GetTaskItemForListTask(listTaskId, id, trackChanges);
-            if (taskItem is null)
-                throw new TaskItemNotFoundException(listTaskId, id);
+            var taskItem = GetTaskItemAndCheckIfExistsAsync(listTaskId, id, trackChanges);
 
             var taskItemDto = _mapper.Map<TaskItemDto>(taskItem);
             return taskItemDto;
         }
 
-        public (TaskItemForUpdateDto taskItemToPatch, TaskItem taskItemEntity)
-            GetTaskItemForPatch(Guid listTaskId, Guid taskItemId, bool listTrackChanges, bool itemTrackChanges)
+        public async Task<(TaskItemForUpdateDto taskItemToPatch, TaskItem taskItemEntity)>
+            GetTaskItemForPatchAsync(Guid listTaskId, Guid taskItemId, bool listTrackChanges, bool itemTrackChanges)
         {
-            var listTaskEntity = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges: listTrackChanges);
-            if (listTaskEntity == null)
-                throw new ListTaskNotFoundException(listTaskId);
+            await CheckIfListTaskExistsAsync(listTaskId, listTrackChanges);
 
-            var taskItemEntity = _repositoryManager.TaskItem.GetTaskItemForListTask(listTaskId, taskItemId, trackChanges: itemTrackChanges);
-            if (taskItemEntity == null)
-                throw new TaskItemNotFoundException(listTaskId, taskItemId);
+            var taskItemEntity = await GetTaskItemAndCheckIfExistsAsync(listTaskId, taskItemId, itemTrackChanges);
 
             var taskItemToPatch = _mapper.Map<TaskItemForUpdateDto>(taskItemEntity);
 
             return (taskItemToPatch, taskItemEntity);
         }
 
-        public IEnumerable<TaskItemDto> GetTaskItems(Guid listTaskId, bool trackChanges)
+        public async Task<(IEnumerable<TaskItemDto> taskItems, MetaData metaData)> GetTaskItemsAsync(Guid listTaskId, TaskItemParameters taskItemParameters, bool trackChanges)
         {
-            var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, trackChanges);
-            if (listTask == null)
-                throw new ListTaskNotFoundException(listTaskId);
+            await CheckIfListTaskExistsAsync(listTaskId, trackChanges);
 
-            var taskItems = _repositoryManager.TaskItem.GetTaskItems(listTaskId, trackChanges);
-            var taskItemDto = _mapper.Map<IEnumerable<TaskItem>, IEnumerable<TaskItemDto>>(taskItems);
+            if (!taskItemParameters.ValidDateRange)
+                throw new DateRangeBadRequestException();
 
-            return taskItemDto;
+            var taskItemsWithMetaData = await _repositoryManager.TaskItem.GetTaskItemsAsync(listTaskId, taskItemParameters, trackChanges);
+            var taskItemDto = _mapper.Map<IEnumerable<TaskItem>, IEnumerable<TaskItemDto>>(taskItemsWithMetaData);
+
+            return (taskItems: taskItemDto, metaData: taskItemsWithMetaData.MetaData);
         }
 
-        public void SaveChangesForPatch(TaskItemForUpdateDto taskItemForUpdate, TaskItem taskItemEntity)
+        public async Task SaveChangesForPatchAsync(TaskItemForUpdateDto taskItemForUpdate, TaskItem taskItemEntity)
         {
             _mapper.Map(taskItemForUpdate, taskItemEntity);
-            _repositoryManager.Save();
+            await _repositoryManager.SaveAsync();
         }
 
-        public void UpdateTaskItemForListTask(Guid listTaskId, Guid id, TaskItemForUpdateDto taskItemForUpdateDto, bool listTaskTrackChanges, bool taskItemTrackChanges)
+        public async Task UpdateTaskItemForListTaskAsync(Guid listTaskId, Guid id, TaskItemForUpdateDto taskItemForUpdateDto, bool listTaskTrackChanges, bool taskItemTrackChanges)
         {
-            var listTask = _repositoryManager.ListTask.GetListTask(listTaskId, listTaskTrackChanges);
-            if (listTask == null)
-                throw new ListTaskNotFoundException(listTaskId);
+            await CheckIfListTaskExistsAsync(listTaskId, listTaskTrackChanges);
 
-            var taskItemEntity = _repositoryManager.TaskItem.GetTaskItemForListTask(listTaskId, id, taskItemTrackChanges);
-            if (taskItemEntity == null)
-                throw new TaskItemNotFoundException(listTaskId, id);
+            var taskItemEntity = await GetTaskItemAndCheckIfExistsAsync(listTaskId, id, taskItemTrackChanges);
 
             _mapper.Map(taskItemForUpdateDto, taskItemEntity);
-            _repositoryManager.Save();
+            await _repositoryManager.SaveAsync();
+        }
+
+        private async Task CheckIfListTaskExistsAsync(Guid listtaskId, bool trackChanges)
+        {
+            var listTask = await _repositoryManager.ListTask.GetListTaskAsync(listtaskId, trackChanges);
+            if (listTask == null)
+                throw new ListTaskNotFoundException(listtaskId);
+        }
+
+        private async Task<TaskItem> GetTaskItemAndCheckIfExistsAsync(Guid listTaskId, Guid id, bool trackChanges)
+        {
+            var taskItem = await _repositoryManager.TaskItem.GetTaskItemForListTaskAsync(listTaskId, id, trackChanges);
+            if (taskItem == null)
+                throw new TaskItemNotFoundException(listTaskId, id);
+
+            return taskItem;
         }
     }
 }

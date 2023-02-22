@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore;
 using TodoApp.Contracts;
 using TodoApp.Entities.Models;
 
@@ -21,23 +22,23 @@ namespace TodoApp.Repository
             Delete(listTask);
         }
 
-        public IEnumerable<ListTask> GetAllListTask(bool trackChanges)
+        public async Task<IEnumerable<ListTask>> GetAllListTaskAsync(bool trackChanges)
         {
-            return FindAll(trackChanges)
+            return await FindAll(trackChanges)
                 .OrderBy(l => l.Name)
-                .ToList();
+                .ToListAsync();
         }
 
-        public ListTask? GetListTask(Guid listTaskId, bool trackChanges)
+        public async Task<ListTask?> GetListTaskAsync(Guid listTaskId, bool trackChanges)
         {
-            return FindByCondition(lt => lt.Id == listTaskId, trackChanges)
-                .SingleOrDefault();
+            return await FindByCondition(lt => lt.Id == listTaskId, trackChanges)
+                .SingleOrDefaultAsync();
         }
 
-        public IEnumerable<ListTask> GetListTaskByIds(IEnumerable<Guid> ids, bool trackChanges)
+        public async Task<IEnumerable<ListTask>> GetListTaskByIdsAsync(IEnumerable<Guid> ids, bool trackChanges)
         {
-            return FindByCondition(x => ids.Contains(x.Id), trackChanges)
-                .ToList();
+            return await FindByCondition(x => ids.Contains(x.Id), trackChanges)
+                .ToListAsync();
         }
     }
 }

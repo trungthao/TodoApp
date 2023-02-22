@@ -6,7 +6,7 @@ namespace TodoApp.Contracts
 		IListTaskRepository ListTask { get; }
 		ITaskItemRepository TaskItem { get; }
 
-		void Save();
+        Task SaveAsync();
 	}
 }
 

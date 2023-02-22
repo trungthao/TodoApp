@@ -4,18 +4,18 @@ namespace TodoApp.Service.Contracts
 {
     public interface IListTaskService
     {
-        IEnumerable<ListTaskDto> GetAllListTask(bool trackChanges);
+        Task<IEnumerable<ListTaskDto>> GetAllListTaskAsync(bool trackChanges);
 
-        ListTaskDto GetListTask(Guid listTaskId, bool trackChanges);
+        Task<ListTaskDto> GetListTaskAsync(Guid listTaskId, bool trackChanges);
 
-        ListTaskDto CreateListTask(ListTaskForCreationDto listTaskDto);
+        Task<ListTaskDto> CreateListTaskAsync(ListTaskForCreationDto listTaskDto);
 
-        IEnumerable<ListTaskDto> GetListTaskByIds(IEnumerable<Guid> ids);
+        Task<IEnumerable<ListTaskDto>> GetListTaskByIdsAsync(IEnumerable<Guid> ids);
 
-        (IEnumerable<ListTaskDto> listTasks, string ids) CreateListTaskCollection(IEnumerable<ListTaskForCreationDto> listTaskCollection);
+        Task<(IEnumerable<ListTaskDto> listTasks, string ids)> CreateListTaskCollectionAsync(IEnumerable<ListTaskForCreationDto> listTaskCollection);
 
-        void DeleteListTask(Guid listTaskId, bool trackChanges);
+        Task DeleteListTaskAsync(Guid listTaskId, bool trackChanges);
 
-        void UpdateListTask(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto, bool trackChanges);
+        Task UpdateListTaskAsync(Guid listTaskId, ListTaskForUpdateDto listTaskForUpdateDto, bool trackChanges);
     }
 }
