@@ -26,6 +26,7 @@ builder.Services.AddControllers(config =>
     .AddApplicationPart(typeof(TodoApp.Presentation.AssembleReference).Assembly);
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
+builder.Services.ConfigureDataShaper();
 builder.Services.ConfigureActionFilters();
 builder.Services.ConfigureSqlContext(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(Program));

@@ -5,6 +5,8 @@ using TodoApp.Presentation.ActionFilters;
 using TodoApp.Repository;
 using TodoApp.Service;
 using TodoApp.Service.Contracts;
+using TodoApp.Service.DataShaping;
+using TodoApp.Shared.DataTransferObjects;
 using TodoAppApi.Formatter;
 
 namespace TodoApp.Api.Extensions
@@ -30,6 +32,11 @@ namespace TodoApp.Api.Extensions
 
         public static void ConfigureServiceManager(this IServiceCollection services) =>
             services.AddScoped<IServiceManager, ServiceManager>();
+
+        public static void ConfigureDataShaper(this IServiceCollection services)
+        {
+            services.AddScoped<IDataShaper<TaskItemDto>, DataShaper<TaskItemDto>>();
+        }
 
         public static void ConfigureSqlContext(this IServiceCollection services, IConfiguration configuration) =>
             services.AddDbContext<RepositoryContext>(opts =>
