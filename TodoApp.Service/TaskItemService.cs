@@ -1,12 +1,12 @@
-﻿using System.Text.RegularExpressions;
-using System;
-using AutoMapper;
+﻿using AutoMapper;
 using TodoApp.Contracts;
 using TodoApp.Entities.Exceptions;
 using TodoApp.Service.Contracts;
 using TodoApp.Shared.DataTransferObjects;
 using TodoApp.Entities.Models;
 using TodoApp.Shared.RequestParameters;
+using TodoApp.Entities.LinkModels;
+using Service.Contracts;
 
 namespace TodoApp.Service
 {
@@ -15,12 +15,17 @@ namespace TodoApp.Service
         private readonly IRepositoryManager _repositoryManager;
         private readonly ILoggerManager _logger;
         private readonly IMapper _mapper;
+        private readonly ITaskItemLinks _taskItemLinks;
 
-        public TaskItemService(IRepositoryManager repositoryManager, ILoggerManager logger, IMapper mapper)
+        public TaskItemService(IRepositoryManager repositoryManager,
+            ILoggerManager logger,
+            IMapper mapper,
+            ITaskItemLinks taskItemLinks)
         {
             _repositoryManager = repositoryManager;
             _logger = logger;
             _mapper = mapper;
+            _taskItemLinks = taskItemLinks;
         }
 
         public async Task<TaskItemDto> CreateTaskItemAsync(Guid listTaskId, TaskItemForCreationDto taskItemForCreationDto, bool trackChanges)
@@ -67,17 +72,17 @@ namespace TodoApp.Service
             return (taskItemToPatch, taskItemEntity);
         }
 
-        public async Task<(IEnumerable<TaskItemDto> taskItems, MetaData metaData)> GetTaskItemsAsync(Guid listTaskId, TaskItemParameters taskItemParameters, bool trackChanges)
+        public async Task<(LinkResponse linkResponse, MetaData metaData)> GetTaskItemsAsync(Guid listTaskId, LinkParameters linkParams, bool trackChanges)
         {
             await CheckIfListTaskExistsAsync(listTaskId, trackChanges);
 
-            if (!taskItemParameters.ValidDateRange)
+            if (!linkParams.TaskItemParameters.ValidDateRange)
                 throw new DateRangeBadRequestException();
 
-            var taskItemsWithMetaData = await _repositoryManager.TaskItem.GetTaskItemsAsync(listTaskId, taskItemParameters, trackChanges);
+            var taskItemsWithMetaData = await _repositoryManager.TaskItem.GetTaskItemsAsync(listTaskId, linkParams.TaskItemParameters, trackChanges);
             var taskItemDto = _mapper.Map<IEnumerable<TaskItem>, IEnumerable<TaskItemDto>>(taskItemsWithMetaData);
-
-            return (taskItems: taskItemDto, metaData: taskItemsWithMetaData.MetaData);
+            var links = _taskItemLinks.TryGenerateLinks(taskItemDto, linkParams.TaskItemParameters.Fields, listTaskId, linkParams.Context);
+            return (linkResponse: links, metaData: taskItemsWithMetaData.MetaData);
         }
 
         public async Task SaveChangesForPatchAsync(TaskItemForUpdateDto taskItemForUpdate, TaskItem taskItemEntity)

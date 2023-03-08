@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using TodoApp.Presentation.ActionFilters;
 using TodoApp.Presentation.ModelBinders;
 using TodoApp.Service.Contracts;
@@ -26,7 +25,7 @@ namespace TodoApp.Presentation.Controllers
             return CreatedAtRoute("ListTaskCollection", new { result.ids }, result.listTasks);
         }
 
-        [HttpGet("")]
+        [HttpGet("", Name = "GetAllListTask")]
         public async Task<IActionResult> GetAllListTask()
         {
             var listTask = await _service.ListTaskService.GetAllListTaskAsync(trackChanges: false);
@@ -47,7 +46,7 @@ namespace TodoApp.Presentation.Controllers
             return Ok(result);
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateListTask")]
         [ServiceFilter(typeof(ValidationFilterAttribute))]
         public async Task<IActionResult> CreateListTask([FromBody] ListTaskForCreationDto listTaskForCreationDto)
         {

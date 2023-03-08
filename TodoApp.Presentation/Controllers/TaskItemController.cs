@@ -2,6 +2,8 @@ using System;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using TodoApp.Entities.LinkModels;
+using TodoApp.Presentation.ActionFilters;
 using TodoApp.Service.Contracts;
 using TodoApp.Shared.DataTransferObjects;
 using TodoApp.Shared.RequestParameters;
@@ -20,11 +22,14 @@ namespace TodoApp.Presentation.Controllers
         }
 
         [HttpGet]
+        [ServiceFilter(typeof(ValidateMediaTypeAttribute))]
         public async Task<IActionResult> GetTaskItems(Guid listTaskId, [FromQuery] TaskItemParameters taskItemParameters)
         {
-            var pagedResult = await _serviceManager.TaskItemService.GetTaskItemsAsync(listTaskId, taskItemParameters, trackChanges: false);
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(pagedResult.metaData));
-            return Ok(pagedResult.taskItems);
+            var linkParams = new LinkParameters(taskItemParameters, HttpContext);
+            var result = await _serviceManager.TaskItemService.GetTaskItemsAsync(listTaskId, linkParams, trackChanges: false);
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(result.metaData));
+
+            return Ok(result.linkResponse.HasLinks ? result.linkResponse.LinkedEntities : result.linkResponse.ShapedEntities);
         }
 
         [HttpDelete("{id:guid}")]

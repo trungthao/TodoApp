@@ -12,4 +12,10 @@
   <ItemGroup>
     <Folder Include="Models\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TodoApp.Shared\TodoApp.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+  </ItemGroup>
 </Project>

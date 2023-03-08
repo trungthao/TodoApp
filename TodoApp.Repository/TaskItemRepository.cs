@@ -36,7 +36,7 @@ namespace TodoApp.Repository
             var taskItems = await FindByCondition(t => t.ListTaskId.Equals(listTaskId), trackChanges)
                 .FilterTaskItems(taskItemParameters.FromDate, taskItemParameters.ToDate)
                 .Search(taskItemParameters.SearchTerm)
-                .OrderBy(t => t.DueDate)
+                .Sort(taskItemParameters.OrderBy)
                 .Skip((taskItemParameters.PageNumber - 1) * taskItemParameters.PageSize)
                 .Take(taskItemParameters.PageSize)
                 .ToListAsync();

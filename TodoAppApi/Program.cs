@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Options;
+using TodoAppApi.Utility;
+using Service.Contracts;
 
 // var logger = NLog.LogManager.Setup().LoadConfigurationFromFile(string.Concat(Directory.GetCurrentDirectory(), "/nlog.config")); 
 
@@ -24,12 +26,15 @@ builder.Services.AddControllers(config =>
     .AddXmlDataContractSerializerFormatters()
     .AddCustomCSVFormatter()
     .AddApplicationPart(typeof(TodoApp.Presentation.AssembleReference).Assembly);
+builder.Services.AddCustomMediaType();
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
 builder.Services.ConfigureDataShaper();
 builder.Services.ConfigureActionFilters();
+builder.Services.AddScoped<ITaskItemLinks, TaskItemLinks>();
 builder.Services.ConfigureSqlContext(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.ConfigureVersioning();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

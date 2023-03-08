@@ -1,4 +1,4 @@
-﻿using System;
+﻿using TodoApp.Entities.LinkModels;
 using TodoApp.Entities.Models;
 using TodoApp.Shared.DataTransferObjects;
 using TodoApp.Shared.RequestParameters;
@@ -7,7 +7,7 @@ namespace TodoApp.Service.Contracts
 {
     public interface ITaskItemService
     {
-        Task<(IEnumerable<TaskItemDto> taskItems, MetaData metaData)> GetTaskItemsAsync(Guid listTaskId, TaskItemParameters taskItemParameters, bool trackChanges);
+        Task<(LinkResponse linkResponse, MetaData metaData)> GetTaskItemsAsync(Guid listTaskId, LinkParameters linkParams, bool trackChanges);
 
         Task<TaskItemDto> CreateTaskItemAsync(Guid listTaskId, TaskItemForCreationDto taskItem, bool trackChanges);
 
